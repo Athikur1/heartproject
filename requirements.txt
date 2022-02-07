@@ -18,6 +18,5 @@ urllib3==1.25.9
 Werkzeug==1.0.1
 wincertstore==0.2
 gunicorn==19.9.0
-tensorflow==2.0.0
 Pillow>=5.4.0
 pandas==0.25.1
