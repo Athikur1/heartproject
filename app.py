@@ -1,38 +1,53 @@
-from flask import Flask, render_template, url_for, flash, redirect
-import joblib
-from flask import request
+from flask import Flask, render_template, request
+import jsonify
+import requests
+import pickle
 import numpy as np
+import sklearn
+from sklearn.preprocessing import StandardScaler
+app = Flask(__name__)
+model = pickle.load(open('random_forest_regression_model.pkl', 'rb'))
+@app.route('/',methods=['GET'])
+def Home():
+    return render_template('heart.html')
 
-app = Flask(__name__, template_folder='templates')
 
-@app.route('/')
-
-@app.route("/Heart")
-def cancer():
-    return render_template("heart.html")
-
-def ValuePredictor(to_predict_list, size):
-    to_predict = np.array(to_predict_list).reshape(1,size)
-    if(size==7):
-        loaded_model = joblib.load(r'C:\Users\ATHIKUR S\Downloads\Health-App-main\Heart_API\heart_model.pkl')
-        result = loaded_model.predict(to_predict)
-    return result[0]
-
-@app.route('/predict', methods = ["POST"])
+standard_to = StandardScaler()
+@app.route("/predict", methods=['POST'])
 def predict():
-    if request.method == "POST":
-        to_predict_list = request.form.to_dict()
-        to_predict_list = list(to_predict_list.values())
-        to_predict_list = list(map(float, to_predict_list))
-         #diabetes
-        if(len(to_predict_list)==7):
-            result = ValuePredictor(to_predict_list,7)
-    
-    if(int(result)==1):
-        prediction = "Sorry you chances of getting the disease. Please consult the doctor immediately"
+    Fuel_Type_Diesel=0
+    if request.method == 'POST':
+        Year = int(request.form['Year'])
+        Present_Price=float(request.form['Present_Price'])
+        Kms_Driven=int(request.form['Kms_Driven'])
+        Kms_Driven2=np.log(Kms_Driven)
+        Owner=int(request.form['Owner'])
+        Fuel_Type_Petrol=request.form['Fuel_Type_Petrol']
+        if(Fuel_Type_Petrol=='Petrol'):
+                Fuel_Type_Petrol=1
+                Fuel_Type_Diesel=0
+        else:
+            Fuel_Type_Petrol=0
+            Fuel_Type_Diesel=1
+        Year=2020-Year
+        Seller_Type_Individual=request.form['Seller_Type_Individual']
+        if(Seller_Type_Individual=='Individual'):
+            Seller_Type_Individual=1
+        else:
+            Seller_Type_Individual=0	
+        Transmission_Mannual=request.form['Transmission_Mannual']
+        if(Transmission_Mannual=='Mannual'):
+            Transmission_Mannual=1
+        else:
+            Transmission_Mannual=0
+        prediction=model.predict([[Present_Price,Kms_Driven2,Owner,Year,Fuel_Type_Diesel,Fuel_Type_Petrol,Seller_Type_Individual,Transmission_Mannual]])
+        output=round(prediction[0],2)
+        if output<0:
+            return render_template('index.html',prediction_texts="Sorry you cannot sell this car")
+        else:
+            return render_template('index.html',prediction_text="You Can Sell The Car at {}".format(output))
     else:
-        prediction = "No need to fear. You have no dangerous symptoms of the disease"
-    return(render_template("result.html", prediction_text=prediction))       
+        return render_template('index.html')
 
-if __name__ == "__main__":
+if __name__=="__main__":
     app.run(debug=True)
