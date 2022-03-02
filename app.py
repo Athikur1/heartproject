@@ -14,7 +14,7 @@ def cancer():
 def ValuePredictor(to_predict_list, size):
     to_predict = np.array(to_predict_list).reshape(1,size)
     if(size==7):
-        loaded_model = joblib.load(open('random_forest_regression_model.pkl', 'rb'))
+        loaded_model = joblib.load(open('heart_model.pkl', 'rb'))
         result = loaded_model.predict(to_predict)
     return result[0]
 
